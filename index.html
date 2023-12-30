@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Anime Searcher</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: url('C:/Users/fetal/Downloads/12345.jpg') center center/cover;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background-color: #ffffff00;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            color: #ffffff;
+        }
+
+        input {
+            width: 80%;
+            padding: 10px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .movie-card {
+            margin: 20px;
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        #movieResults,
+        #recommendedMovies {
+            margin-top: 20px;
+        }
+
+        #recommendedMovies h2 {
+            color: #00ff00;
+        }
+
+        .movie-details {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            z-index: 999;
+        }
+
+        .movie-details img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        #imageCard {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #imageCard img {
+            max-width: 100%;
+            max-height: 400px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Add more image cards as needed -->
+
+    <div class="image-details" id="imageDetails">
+        <h2 id="imageTitle"></h2>
+        <p id="imageDescription"></p>
+    </div>
+    <script>
+        function searchAnimeByTitle(animeTitle) {
+            // Construct the Bilibili search URL with the provided anime title
+            const bilibiliSearchUrl = `https://search.bilibili.com/all?keyword=${encodeURIComponent(animeTitle)}`;
+
+            // Redirect the user to the Bilibili search page
+            window.location.href = bilibiliSearchUrl;
+        }
+
+        function searchMovies() {
+            const searchInput = document.getElementById('searchInput').value;
+
+            if (!searchInput) {
+                alert('Please enter an anime title');
+                return;
+            }
+
+            // Use the searchAnimeByTitle function for anime searches
+            searchAnimeByTitle(searchInput);
+        }
+
+        const apiKey = 'YOUR_TMDB_API_KEY'; // Replace with your TMDb API key
+
+        // Function to display anime detail page
+        function displayAnimeDetails(anime) {
+            const movieTitle = document.getElementById('movieTitle');
+            const movieDetails = document.getElementById('movieDetails');
+            const movieDescription = document.getElementById('movieDescription');
+
+            // Set anime title
+            movieTitle.textContent = anime.name;
+
+            showDetailPage();
+        }
+
+        // Function to display anime search results
+        function displayAnimeResults(animeResults) {
+            const movieResults = document.getElementById('movieResults');
+            movieResults.innerHTML = '';
+
+            if (!animeResults || animeResults.length === 0) {
+                movieResults.innerHTML = '<p>No results found</p>';
+                return;
+            }
+
+            animeResults.forEach(anime => {
+                const animeCard = document.createElement('div');
+                animeCard.classList.add('movie-card');
+
+                animeCard.innerHTML = `
+                    <img src="https://www.bilibili.tv/en${anime.poster_path}" alt="${anime.name}" />
+                    <div>
+                        <h3>${anime.name}</h3>
+                        <p>${anime.first_air_date ? `First Air Date: ${anime.first_air_date}` : ''}</p>
+                    </div>
+                `;
+
+                // Add double-click event to show anime detail page
+                animeCard.addEventListener('dblclick', () => showAnimeDetails(anime.id));
+
+                movieResults.appendChild(animeCard);
+            });
+        }
+
+        // Function to show the anime detail page
+        function showDetailPage() {
+            // Hide the main page
+            document.querySelector('.container').style.display = 'none';
+            // Show the anime detail page
+            document.body.style.background = '#f0f0f0';
+            document.getElementById('movieTitle').style.color = '#333';
+            document.getElementById('movieDetails').style.marginTop = '20px';
+        }
+
+        // Function to go back to the main page
+        function goBack() {
+            // Show the main page
+            document.querySelector('.container').style.display = 'block';
+        }
+
+        // Function to display movies
+        function displayMovies(movies, containerId) {
+            const movieResults = document.getElementById(containerId);
+            movieResults.innerHTML = '';
+
+            if (!movies) {
+                movieResults.innerHTML = '<p>No results found</p>';
+                return;
+            }
+
+            movies.forEach(movie => {
+                const movieCard = document.createElement('div');
+                movieCard.classList.add('movie-card');
+
+                movieCard.innerHTML = `
+                    <img src="${movie.Poster}" alt="${movie.Title}" />
+                    <div>
+                        <h3>${movie.Title}</h3>
+                        <p>${movie.Year}</p>
+                    </div>
+                `;
+
+                movieResults.appendChild(movieCard);
+            });
+        }
+
+        function createImageElement(src, alt, width, height) {
+            const imgElement = document.createElement('img');
+            imgElement.src = src;
+            imgElement.alt = alt;
+            imgElement.width = width;
+            imgElement.height = height;
+            return imgElement;
+        }
+
+        // Function to display recommended movies
+        function displayRecommendedMovies() {
+            const recommendedMovies = [
+                { Title: 'One Piece', Year: '2023', Poster: '101079.jpg' },
+                { Title: 'Black Clover', Year: '2024', Poster: 'black-clover-next-arc.jpg' },
+                { Title: 'Solo Leveling', Year: '2024', Poster: '31477.jpeg' },
+            ];
+
+            // Container to hold recommended movies
+            const recommendedMoviesContainer = document.getElementById('recommendedMovies');
+
+            // Loop through recommended movies and create image elements
+            recommendedMovies.forEach(movie => {
+                const movieCard = document.createElement('div');
+                movieCard.classList.add('movie-card');
+
+                // Create and append image element with a specific size
+                const posterImage = createImageElement(movie.Poster, `${movie.Title} Poster`, 150, 200); // Set width and height as needed
+                movieCard.appendChild(posterImage);
+
+                // Create and append title and year elements (you can customize this part)
+                const movieInfo = document.createElement('div');
+                const title = document.createElement('h3');
+                const year = document.createElement('p');
+
+                title.textContent = movie.Title;
+                year.textContent = movie.Year;
+
+                movieInfo.appendChild(title);
+                movieInfo.appendChild(year);
+
+                movieCard.appendChild(movieInfo);
+
+                // Append the movie card to the container
+                recommendedMoviesContainer.appendChild(movieCard);
+            });
+        }
+
+        // Call the function to display recommended movies
+        displayRecommendedMovies();
+
+        function showImageDetails(imageSrc) {
+            const imageDetails = document.getElementById('imageDetails');
+            const imageTitle = document.getElementById('imageTitle');
+            const imageDescription = document.getElementById('imageDescription');
+
+            // Set image source
+            const imgElement = document.createElement('img');
+            imgElement.src = imageSrc;
+            imgElement.alt = 'Image Details';
+
+            // Set image details
+            imageTitle.textContent = 'Image Title';
+            imageDescription.textContent = 'Image Description';
+
+            // Display image details
+            imageDetails.style.display = 'block';
+            imageDetails.appendChild(imgElement);
+        }
+
+        function showDetails(title, description) {
+            const imageTitle = document.getElementById('imageTitle');
+            const imageDescription = document.getElementById('imageDescription');
+
+            // Set image details
+            imageTitle.textContent = title;
+            imageDescription.textContent = description;
+        }
+
+        function hideImageDetails() {
+            const imageDetails = document.getElementById('imageDetails');
+            const imageTitle = document.getElementById('imageTitle');
+            const imageDescription = document.getElementById('imageDescription');
+
+            // Clear image details
+            imageTitle.textContent = '';
+            imageDescription.textContent = '';
+
+            // Hide image details
+            imageDetails.style.display = 'none';
+
+            // Remove the image element
+            const imgElement = imageDetails.querySelector('img');
+            if (imgElement) {
+                imageDetails.removeChild(imgElement);
+            }
+        }
+    </script>
+    <div class="container">
+        <h1>Anime Searcher</h1>
+        <input type="text" id="searchInput" placeholder="Enter an anime title">
+        <button onclick="searchMovies()">Search</button>
+        <div id="movieResults"></div>
+
+        <!-- Recommended Movies Section -->
+        <div id="recommendedMovies">
+            <h2>Recommended Anime</h2>
+            <!-- Call the function to display recommended movies -->
+            <script>
+                displayRecommendedMovies();
+            </script>
+        </div>
+    </div>
+</body>
+
+</html>
